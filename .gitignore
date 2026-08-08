@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.idea/
+*.iml
+local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+*.jks
+*.keystore
