@@ -15,6 +15,7 @@ function App() {
   const [screen, setScreen] = useState('home');
   const [photo, setPhoto] = useState(null);
   const [result, setResult] = useState(null);
+  const [demoResult, setDemoResult] = useState(1);
 
   const goCamera = () => {
     if (photo?.url) URL.revokeObjectURL(photo.url);
@@ -28,7 +29,7 @@ function App() {
   const analyze = async () => {
     setScreen('analyzing');
     try {
-      const response = await analyzeParkingPhoto({ imageFile: photo?.file });
+      const response = await analyzeParkingPhoto({ imageFile: photo?.file, mockResult: demoResult });
       setResult(response);
       setScreen(response.approved ? 'success' : 'failure');
     } catch (error) {
@@ -42,7 +43,7 @@ function App() {
       <div className="phone">
         {screen === 'home' && <Home onStart={goCamera} />}
         {screen === 'camera' && <CameraScreen photo={photo} onBack={() => setScreen('home')} onPhoto={capturePhoto} onNext={() => setScreen('location')} />}
-        {screen === 'location' && <LocationScreen onBack={() => setScreen('camera')} onAnalyze={analyze} />}
+        {screen === 'location' && <LocationScreen demoResult={demoResult} setDemoResult={setDemoResult} onBack={() => setScreen('camera')} onAnalyze={analyze} />}
         {screen === 'analyzing' && <Analyzing photo={photo} />}
         {screen === 'success' && <Success result={result} onDone={() => setScreen('home')} />}
         {screen === 'failure' && <Failure result={result} onRetry={goCamera} onMap={() => alert('프로토타입: 가까운 주차구역 지도를 엽니다.')} />}
@@ -73,13 +74,13 @@ function CameraScreen({ photo, onBack, onPhoto, onNext }) {
   </section>;
 }
 
-function LocationScreen({ onBack, onAnalyze }) {
+function LocationScreen({ demoResult, setDemoResult, onBack, onAnalyze }) {
   return <section className="screen light-screen"><Header title="위치 확인" onBack={onBack}/><div className="content-pad">
     <div className="step-label">마지막 확인</div><h2>현재 위치가 맞나요?</h2><p className="subtext">정확한 반납 처리를 위해 위치 정보를 확인해 주세요.</p>
     <div className="map-card"><div className="map-lines"><i/><i/><i/><i/></div><div className="map-pin-pulse"><MapPin fill="currentColor"/></div><button className="locate"><Crosshair/></button></div>
     <div className="address-card"><div className="address-icon"><Navigation fill="currentColor"/></div><div><span>현재 반납 위치</span><strong>서울특별시 강남구 테헤란로 152</strong><small>역삼역 1번 출구 인근</small></div><CheckCircle2 className="address-check"/></div>
     <div className="check-row"><LocateFixed/><div><strong>GPS 위치 확인 완료</strong><span>정확도 약 8m</span></div><Check/></div>
-    <div className="demo-panel"><div><strong>AI 모델 준비 완료</strong><span>촬영한 사진을 YOLO와 Linear SVM으로 분석합니다</span></div></div>
+    <div className="demo-panel"><div><strong>테스트 판정 코드</strong><span>배포 웹에서는 결과를 직접 선택합니다</span></div><select value={demoResult} onChange={e => setDemoResult(Number(e.target.value))}><option value={0}>Code 0 · 킥보드 쓰러짐</option><option value={1}>Code 1 · 정상 / 반납 승인</option><option value={2}>Code 2 · 점자블록 침범</option><option value={3}>Code 3 · 차도 주차</option><option value={4}>Code 4 · 자전거도로 주차</option></select></div>
   </div><div className="sticky-action"><button className="primary-button" onClick={onAnalyze}>위치 확인하고 분석하기 <Sparkles/></button></div></section>;
 }
 
