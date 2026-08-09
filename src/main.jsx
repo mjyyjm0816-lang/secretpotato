@@ -5,12 +5,10 @@ import { analyzeParkingPhoto } from './services/parkingAnalysis';
 import './styles.css';
 
 const reasons = {
-  1: { icon: Footprints, title: '점자블록을 침범했어요', desc: '시각장애인의 통행을 위해 점자블록에서 50cm 이상 떨어져 주세요.' },
-  2: { icon: CircleAlert, title: '보행자 통행을 방해해요', desc: '킥보드를 건물 벽면 쪽으로 옮겨 보행 공간을 확보해 주세요.' },
-  3: { icon: Road, title: '차도에는 주차할 수 없어요', desc: '안전한 인도 또는 지정 PM 주차구역으로 이동해 주세요.' },
-  4: { icon: SquareParking, title: '지정 주차구역이 아니에요', desc: '지도에서 가까운 주차구역을 확인한 뒤 다시 촬영해 주세요.' },
-  5: { icon: CircleAlert, title: '출입구를 막고 있어요', desc: '건물과 시설 출입구에서 충분히 떨어진 곳으로 이동해 주세요.' },
-  6: { icon: Footprints, title: '횡단보도 주변에 주차했어요', desc: '보행자의 안전을 위해 횡단보도와 보행 진입로를 피해서 주차해 주세요.' },
+  0: { icon: CircleAlert, title: '킥보드가 쓰러져 있어요', desc: '킥보드를 바로 세우고 넘어지지 않도록 안전하게 주차해 주세요.' },
+  2: { icon: Footprints, title: '점자블록을 침범했어요', desc: '시각장애인의 통행을 위해 점자블록에서 50cm 이상 떨어져 주세요.' },
+  3: { icon: Road, title: '차도에는 주차할 수 없어요', desc: '차도가 아닌 안전한 주차구역으로 이동해 주세요.' },
+  4: { icon: SquareParking, title: '자전거도로에는 주차할 수 없어요', desc: '자전거 통행을 방해하지 않는 안전한 주차구역으로 이동해 주세요.' },
 };
 
 function App() {
@@ -93,6 +91,6 @@ function Analyzing({ photo }) {
 
 function Success({ result, onDone }) { return <section className="screen result-screen success-screen"><div className="confetti">✦ <span>●</span> ◆ <i>✦</i></div><div className="result-icon success-icon"><Check/></div><h1>반납이 완료됐어요!</h1><p>안전하고 올바르게 주차해 주셔서 감사해요.</p><div className="receipt"><div className="receipt-brand"><span className="brand-mark"><Zap fill="currentColor"/></span><div><strong>이용 내역</strong><span>2026. 08. 07 · 23:48</span></div></div><div className="receipt-row"><span>이용 시간</span><strong>12분 38초</strong></div><div className="receipt-row"><span>이용 요금</span><strong>2,300원</strong></div><div className="receipt-row"><span>반납 위치</span><strong>역삼역 1번 출구 인근</strong></div><div className="discount"><Sparkles/> 바른 주차 리워드 <strong>+100P</strong></div></div><div className="sticky-action"><button className="primary-button" onClick={onDone}>확인</button></div></section> }
 
-function Failure({ result, onRetry, onMap }) { const info = reasons[result?.reasonCode] || reasons[1]; const Icon = info.icon; return <section className="screen result-screen failure-screen"><div className="result-icon failure-icon"><X/></div><span className="fail-label">반납할 수 없어요</span><h1>{info.title}</h1><p>{info.desc}</p><div className="reason-visual"><div className="warning-zone"><Icon/><span>주차 금지 영역</span></div><div className="mini-pm">🛴</div><div className="arrow-move"><span>안전한 곳으로 이동</span>↗</div></div><div className="guide-box"><strong>이렇게 다시 주차해 주세요</strong><div><CheckCircle2/> 보행 공간을 1.5m 이상 확보하기</div><div><CheckCircle2/> 킥보드를 벽면과 나란히 세우기</div><div><CheckCircle2/> 출입구와 점자블록 피하기</div></div><div className="sticky-action dual"><button className="secondary-button" onClick={onMap}><MapPin/> 주차구역 찾기</button><button className="primary-button" onClick={onRetry}><RefreshCw/> 다시 촬영</button></div></section> }
+function Failure({ result, onRetry, onMap }) { const info = reasons[result?.reasonCode] || reasons[0]; const Icon = info.icon; return <section className="screen result-screen failure-screen"><div className="result-icon failure-icon"><X/></div><span className="fail-label">반납할 수 없어요</span><h1>{info.title}</h1><p>{info.desc}</p><div className="reason-visual"><div className="warning-zone"><Icon/><span>주차 금지 영역</span></div><div className="mini-pm">🛴</div><div className="arrow-move"><span>안전한 곳으로 이동</span>↗</div></div><div className="guide-box"><strong>이렇게 다시 주차해 주세요</strong><div><CheckCircle2/> 보행 공간을 1.5m 이상 확보하기</div><div><CheckCircle2/> 킥보드를 벽면과 나란히 세우기</div><div><CheckCircle2/> 출입구와 점자블록 피하기</div></div><div className="sticky-action dual"><button className="secondary-button" onClick={onMap}><MapPin/> 주차구역 찾기</button><button className="primary-button" onClick={onRetry}><RefreshCw/> 다시 촬영</button></div></section> }
 
 createRoot(document.getElementById('root')).render(<App />);
