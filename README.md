@@ -4,10 +4,12 @@
 
 ## 실행
 
-Node.js 18 이상이 필요합니다.
+Node.js 18 이상과 Python 3.10 이상이 필요합니다. 최초 한 번 다음 명령으로 의존성을 설치합니다.
 
 ```bash
 npm install
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 npm run dev
 ```
 
@@ -18,7 +20,7 @@ npm run dev
 1. `반납 시작하기`
 2. 카메라 촬영 버튼
 3. 현재 위치 확인
-4. 프로토타입 판정 결과 선택
+4. YOLO 세그멘테이션 및 Linear SVM 판정
 5. AI 분석 애니메이션
 6. 승인 또는 구체적인 반려 사유 확인
 
@@ -43,9 +45,9 @@ npm run dev
 
 앱과 AI API 사이의 판정 코드는 **숫자 `0~6`만 사용**합니다. 모델의 클래스명과 내부 추론 정보는 앱 화면 로직에 직접 연결하지 않습니다.
 
-## 실제 YOLO API 연동
+## 실제 AI 모델 연동
 
-`src/services/parkingAnalysis.js`의 `analyzeParkingPhoto()`가 유일한 AI 연동 경계입니다. 현재 mock 응답을 반환하며, 주석의 `fetch` 예시처럼 실제 API 호출로 교체할 수 있습니다.
+`models/best.pt`가 사진을 9개 객체 클래스로 세그멘테이션하고, 좌표·면적·영역 관계로 구성된 112개 특징을 추출합니다. `models/situation_classifier_linear_svm_balanced_1to4.joblib`이 이 특징으로 주차 상황을 최종 분류합니다. FastAPI 서버 구현은 `api/`에 있으며 React 앱은 촬영한 원본 사진을 API로 전송합니다.
 
 권장 API 응답 형식:
 

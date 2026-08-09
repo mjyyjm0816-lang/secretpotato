@@ -16,26 +16,35 @@ const reasons = {
 function App() {
   const [screen, setScreen] = useState('home');
   const [photo, setPhoto] = useState(null);
-  const [demoResult, setDemoResult] = useState(0);
   const [result, setResult] = useState(null);
 
-  const goCamera = () => { setPhoto(null); setResult(null); setScreen('camera'); };
-  const useDemoPhoto = () => {
-    setPhoto('demo');
+  const goCamera = () => {
+    if (photo?.url) URL.revokeObjectURL(photo.url);
+    setPhoto(null); setResult(null); setScreen('camera');
+  };
+  const capturePhoto = (file) => {
+    if (!file) return;
+    if (photo?.url) URL.revokeObjectURL(photo.url);
+    setPhoto({ file, url: URL.createObjectURL(file) });
   };
   const analyze = async () => {
     setScreen('analyzing');
-    const response = await analyzeParkingPhoto({ mockResult: demoResult });
-    setResult(response);
-    setScreen(response.approved ? 'success' : 'failure');
+    try {
+      const response = await analyzeParkingPhoto({ imageFile: photo?.file });
+      setResult(response);
+      setScreen(response.approved ? 'success' : 'failure');
+    } catch (error) {
+      setScreen('location');
+      alert(error.message);
+    }
   };
 
   return (
     <main className="app-shell">
       <div className="phone">
         {screen === 'home' && <Home onStart={goCamera} />}
-        {screen === 'camera' && <CameraScreen photo={photo} onBack={() => setScreen('home')} onDemo={useDemoPhoto} onNext={() => setScreen('location')} />}
-        {screen === 'location' && <LocationScreen photo={photo} demoResult={demoResult} setDemoResult={setDemoResult} onBack={() => setScreen('camera')} onAnalyze={analyze} />}
+        {screen === 'camera' && <CameraScreen photo={photo} onBack={() => setScreen('home')} onPhoto={capturePhoto} onNext={() => setScreen('location')} />}
+        {screen === 'location' && <LocationScreen onBack={() => setScreen('camera')} onAnalyze={analyze} />}
         {screen === 'analyzing' && <Analyzing photo={photo} />}
         {screen === 'success' && <Success result={result} onDone={() => setScreen('home')} />}
         {screen === 'failure' && <Failure result={result} onRetry={goCamera} onMap={() => alert('프로토타입: 가까운 주차구역 지도를 엽니다.')} />}
@@ -55,31 +64,31 @@ function Home({ onStart }) {
   </section>;
 }
 
-function CameraScreen({ photo, onBack, onDemo, onNext }) {
+function CameraScreen({ photo, onBack, onPhoto, onNext }) {
   return <section className="screen camera-screen"><Header title="주차 사진 촬영" onBack={onBack} dark />
     <div className={`viewfinder ${photo ? 'has-photo' : ''}`}>
-      {photo && photo !== 'demo' ? <img src={photo} alt="촬영한 주차 사진" /> : <div className="street-scene"><div className="scene-wall"/><div className="scene-sidewalk"/><div className="tactile"/><div className="mini-scooter">🛴</div></div>}
+      {photo ? <img src={photo.url} alt="촬영한 주차 사진" /> : <div className="street-scene"><div className="scene-wall"/><div className="scene-sidewalk"/><div className="tactile"/><div className="mini-scooter">🛴</div></div>}
       {!photo && <><div className="guide-corners"><i/><i/><i/><i/></div><div className="camera-tip"><ScanLine/><span>킥보드와 주변 바닥이<br/>모두 나오게 촬영해 주세요</span></div></>}
       {photo && <div className="photo-badge"><Check/> 사진이 준비됐어요</div>}
     </div>
-    <div className="camera-controls"><div className="photo-rules"><div><CheckCircle2/> 킥보드 전체</div><div><CheckCircle2/> 주변 바닥</div><div><CheckCircle2/> 밝은 환경</div></div><div className="shutter-row camera-only"><span/><button className="shutter" onClick={onDemo} aria-label="사진 촬영"><span><Camera/></span></button><span/></div>{photo && <button className="primary-button floating-next" onClick={onNext}>이 사진 사용하기 <ChevronRight/></button>}</div>
+    <div className="camera-controls"><div className="photo-rules"><div><CheckCircle2/> 킥보드 전체</div><div><CheckCircle2/> 주변 바닥</div><div><CheckCircle2/> 밝은 환경</div></div><div className="shutter-row camera-only"><span/><label className="shutter" aria-label="사진 촬영"><input style={{ display: 'none' }} type="file" accept="image/*" capture="environment" onChange={e => onPhoto(e.target.files?.[0])}/><span><Camera/></span></label><span/></div>{photo && <button className="primary-button floating-next" onClick={onNext}>이 사진 사용하기 <ChevronRight/></button>}</div>
   </section>;
 }
 
-function LocationScreen({ photo, demoResult, setDemoResult, onBack, onAnalyze }) {
+function LocationScreen({ onBack, onAnalyze }) {
   return <section className="screen light-screen"><Header title="위치 확인" onBack={onBack}/><div className="content-pad">
     <div className="step-label">마지막 확인</div><h2>현재 위치가 맞나요?</h2><p className="subtext">정확한 반납 처리를 위해 위치 정보를 확인해 주세요.</p>
     <div className="map-card"><div className="map-lines"><i/><i/><i/><i/></div><div className="map-pin-pulse"><MapPin fill="currentColor"/></div><button className="locate"><Crosshair/></button></div>
     <div className="address-card"><div className="address-icon"><Navigation fill="currentColor"/></div><div><span>현재 반납 위치</span><strong>서울특별시 강남구 테헤란로 152</strong><small>역삼역 1번 출구 인근</small></div><CheckCircle2 className="address-check"/></div>
     <div className="check-row"><LocateFixed/><div><strong>GPS 위치 확인 완료</strong><span>정확도 약 8m</span></div><Check/></div>
-    <div className="demo-panel"><div><strong>Vision Detection Code</strong><span>실제 앱에서는 AI가 자동 결정합니다</span></div><select value={demoResult} onChange={e => setDemoResult(Number(e.target.value))}><option value={0}>Code 0 · 적합 / 반납 승인</option><option value={1}>Code 1 · 점자블록 침범</option><option value={2}>Code 2 · 통행 방해</option><option value={3}>Code 3 · 차도 주차</option><option value={4}>Code 4 · 지정구역 아님</option><option value={5}>Code 5 · 출입구 방해</option><option value={6}>Code 6 · 횡단보도 주변</option></select></div>
+    <div className="demo-panel"><div><strong>AI 모델 준비 완료</strong><span>촬영한 사진을 YOLO와 Linear SVM으로 분석합니다</span></div></div>
   </div><div className="sticky-action"><button className="primary-button" onClick={onAnalyze}>위치 확인하고 분석하기 <Sparkles/></button></div></section>;
 }
 
 function Analyzing({ photo }) {
   const [step, setStep] = useState(0); useEffect(() => { const id = setInterval(() => setStep(s => Math.min(s + 1, 2)), 600); return () => clearInterval(id); }, []);
   const labels = ['킥보드 위치 확인', '주변 공간 분석', '주차 기준 검사'];
-  return <section className="screen analyzing-screen"><div className="analysis-visual">{photo && photo !== 'demo' ? <img src={photo} alt="분석 중인 사진"/> : <div className="street-scene"><div className="scene-wall"/><div className="scene-sidewalk"/><div className="tactile"/><div className="mini-scooter">🛴</div></div>}<div className="scan-beam"/><div className="detect-box"><span>PM · 98%</span></div></div><div className="analysis-body"><div className="ai-orb"><Sparkles/></div><h2>AI가 주차 상태를<br/>확인하고 있어요</h2><p>잠시만 기다려 주세요</p><div className="analysis-steps">{labels.map((label, i) => <div className={i <= step ? 'active' : ''} key={label}><span>{i < step ? <Check/> : i === step ? <span className="dot"/> : null}</span>{label}</div>)}</div></div></section>;
+  return <section className="screen analyzing-screen"><div className="analysis-visual">{photo ? <img src={photo.url} alt="분석 중인 사진"/> : <div className="street-scene"><div className="scene-wall"/><div className="scene-sidewalk"/><div className="tactile"/><div className="mini-scooter">🛴</div></div>}<div className="scan-beam"/><div className="detect-box"><span>PM 분석 중</span></div></div><div className="analysis-body"><div className="ai-orb"><Sparkles/></div><h2>AI가 주차 상태를<br/>확인하고 있어요</h2><p>잠시만 기다려 주세요</p><div className="analysis-steps">{labels.map((label, i) => <div className={i <= step ? 'active' : ''} key={label}><span>{i < step ? <Check/> : i === step ? <span className="dot"/> : null}</span>{label}</div>)}</div></div></section>;
 }
 
 function Success({ result, onDone }) { return <section className="screen result-screen success-screen"><div className="confetti">✦ <span>●</span> ◆ <i>✦</i></div><div className="result-icon success-icon"><Check/></div><h1>반납이 완료됐어요!</h1><p>안전하고 올바르게 주차해 주셔서 감사해요.</p><div className="receipt"><div className="receipt-brand"><span className="brand-mark"><Zap fill="currentColor"/></span><div><strong>이용 내역</strong><span>2026. 08. 07 · 23:48</span></div></div><div className="receipt-row"><span>이용 시간</span><strong>12분 38초</strong></div><div className="receipt-row"><span>이용 요금</span><strong>2,300원</strong></div><div className="receipt-row"><span>반납 위치</span><strong>역삼역 1번 출구 인근</strong></div><div className="discount"><Sparkles/> 바른 주차 리워드 <strong>+100P</strong></div></div><div className="sticky-action"><button className="primary-button" onClick={onDone}>확인</button></div></section> }
