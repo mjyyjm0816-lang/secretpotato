@@ -27,7 +27,7 @@ CLASS_KEYS = {
     8: "c8_bikeroad",
 }
 RELATION_CLASSES = (1, 3, 4, 5, 6, 7, 8)
-LABEL_TO_REASON = {1: 0, 2: 4, 3: 3, 4: 1}
+LABEL_TO_REASON = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
 
 @dataclass
